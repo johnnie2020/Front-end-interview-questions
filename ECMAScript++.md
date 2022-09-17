@@ -356,3 +356,264 @@ function getType(data){
 如下图：
 
 ![image.png](https://cdn.nlark.com/yuque/0/2021/png/758572/1638069187324-2fcef6b0-e151-4c99-a3cb-9063e874d238.png#clientId=ub7d735a1-a078-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=211&id=u153653ce&margin=%5Bobject%20Object%5D&name=image.png&originHeight=790&originWidth=1120&originalType=binary&ratio=1&rotation=0&showTitle=false&size=341424&status=done&style=none&taskId=udce5aa06-c186-4996-b71e-55e7269f3d3&title=&width=299)
+
+### 34. 作用域与作用域链
+> 作用域是在运行时代码中的某些特定部分中变量，函数和对象的可访问性。换句话说，作用域决定了代码区块中变量和其他资源的可见性。_ES6_ 之前 _JavaScript_ 没有块级作用域，只有全局作用域和函数作用域。_ES6_ 的到来，为我们提供了块级作用域。
+>  作用域链指的是作用域与作用域之间形成的链条。当我们查找一个当前作用域没有定义的变量（自由变量）的时候，就会向上一级作用域寻找，如果上一级也没有，就再一层一层向上寻找，直到找到全局作用域还是没找到，就宣布放弃。这种一层一层的关系，就是作用域链 。
+
+### 谈谈你对 _JS_ 执行上下文栈和作用域链的理解 
+> **什么是执行上下文？**
+>  
+> 简而言之，执行上下文是评估和执行 JavaScript 代码的环境的抽象概念。每当 Javascript 代码在运行的时候，它都是在执行上下文中运行。
+>  
+> **执行上下文的类型**
+>  
+> JavaScript 中有三种执行上下文类型。
+>  
+> - **全局执行上下文** — 这是默认或者说基础的上下文，任何不在函数内部的代码都在全局上下文中。它会执行两件事：创建一个全局的 window 对象（浏览器的情况下），并且设置 `this` 的值等于这个全局对象。一个程序中只会有一个全局执行上下文。
+> - **函数执行上下文** — 每当一个函数被调用时, 都会为该函数创建一个新的上下文。每个函数都有它自己的执行上下文，不过是在函数被调用时创建的。函数上下文可以有任意多个。每当一个新的执行上下文被创建，它会按定义的顺序（将在后文讨论）执行一系列步骤。
+> - **Eval 函数执行上下文** — 执行在 `eval` 函数内部的代码也会有它属于自己的执行上下文。
+> 
+
+> **调用栈**
+>  
+> 调用栈是解析器(如浏览器中的的javascript解析器)的一种机制，可以在脚本调用多个函数时，跟踪每个函数在完成执行时应该返回控制的点。（如什么函数正在执行，什么函数被这个函数调用，下一个调用的函数是谁）
+>  
+> - 当脚本要调用一个函数时，解析器把该函数添加到栈中并且执行这个函数。
+> - 任何被这个函数调用的函数会进一步添加到调用栈中，并且运行到它们被上个程序调用的位置。
+> - 当函数运行结束后，解释器将它从堆栈中取出，并在主代码列表中继续执行代码。
+> - 如果栈占用的空间比分配给它的空间还大，那么则会导致“栈溢出”错误。
+> 
+
+> **作用域链**
+>  
+> 当访问一个变量时，编译器在执行这段代码时，会首先从当前的作用域中查找是否有这个标识符，如果没有找到，就会去父作用域查找，如果父作用域还没找到继续向上查找，直到全局作用域为止,，而作用域链，就是有当前作用域与上层作用域的一系列变量对象组成，它保证了当前执行的作用域对符合访问权限的变量和函数的有序访问。
+
+### 38. 描述下列代码的执行结果
+
+```javascript
+const first = () => (new Promise((resolve, reject) => {
+    console.log(3);
+    let p = new Promise((resolve, reject) => {
+        console.log(7);
+        setTimeout(() => {
+            console.log(1);
+        }, 0);
+        setTimeout(() => {
+            console.log(2);
+            resolve(3);
+        }, 0)
+        resolve(4);
+    });
+    resolve(2);
+    p.then((arg) => {
+        console.log(arg, 5); // 1 bb
+    });
+    setTimeout(() => {
+        console.log(6);
+    }, 0);
+}))
+first().then((arg) => {
+    console.log(arg, 7); // 2 aa
+    setTimeout(() => {
+        console.log(8);
+    }, 0);
+});
+setTimeout(() => {
+    console.log(9);
+}, 0);
+console.log(10);
+```
+### 39. 如何判断数组或对象（美团 19年） 
+> 1. 通过 _instanceof_ 进行判断
+> 1. 通过对象的 _constructor_ 属性
+> 3. _Object.prototype.toString.call(arr)_ 
+> 4. 可以通过 _ES6_ 新提供的方法 _Array.isArray( )_
+
+
+### _Object.assign_（美团 19年）
+> _Object.assign_ 方法可以把任意多个的源对象自身的可枚举属性拷贝给目标对象，然后返回目标对象。但是 _Object.assign_ 方法进行的是浅拷贝，拷贝的是对象的属性的引用，而不是对象本身。
+
+### 42. 说说 _instanceof_ 原理，并回答下面的题目（美团 19年）
+
+```javascript
+function A(){}
+function B(){}
+A.prototype = new B(); 
+let a = new A(); 
+console.log(a instanceof B) // true of false ?
+```
+
+>  _instanceof_  用于检测一个对象是否为某个构造函数的实例。
+> 例如：_A instanceof B_
+_instanceof_ 用于检测对象 _A_ 是不是 _B_ 的实例，而检测是基于原型链进行查找的，也就是说 _B_ 的 _prototype_ 有没有在对象 _A_ 的__*proto___ 原型链上，如果有就返回 _true_，否则返回 _false
+
+### 43. 内存泄漏（美团 19 年）
+> 内存泄漏（_Memory Leak_）是指程序中己动态分配的堆内存由于某种原因程序未释放或无法释放，造成系统内存的浪费，导致程序运行速度减慢甚至系统崩溃等严重后果。
+> _Javascript_ 是一种高级语言，它不像 _C_ 语言那样要手动申请内存，然后手动释放，_Javascript_ 在声明变量的时候自动会分配内存，普通的类型比如 _number_，一般放在栈内存里，对象放在堆内存里，声明一个变量，就分配一些内存，然后定时进行垃圾回收。垃圾回收的任务由 _JavaScript_ 引擎中的垃圾回收器来完成，它监视所有对象，并删除那些不可访问的对象。
+> 基本的垃圾回收算法称为**“标记-清除”**，定期执行以下“垃圾回收”步骤:
+>  
+> - 垃圾回收器获取根并**“标记”**(记住)它们。
+> - 然后它访问并“标记”所有来自它们的引用。
+> - 然后它访问标记的对象并标记它们的引用。所有被访问的对象都被记住，以便以后不再访问同一个对象两次。
+> - 以此类推，直到有未访问的引用(可以从根访问)为止。
+> - 除标记的对象外，所有对象都被删除。
+
+### 45. _weakmap、weakset_（美团 _19_ 年）
+> _WeakSet_ 对象是一些对象值的集合, 并且其中的每个对象值都只能出现一次。在 _WeakSet_ 的集合中是唯一的
+> 它和 _Set_ 对象的区别有两点:
+> - 与 _Set_ 相比，_WeakSet_ 只能是**对象的集合**，而不能是任何类型的任意值。
+> - _WeakSet_ 持弱引用：集合中对象的引用为弱引用。 如果没有其他的对 _WeakSet_ 中对象的引用，那么这些对象会被当成垃圾回收掉。 这也意味着 _WeakSet_ 中没有存储当前对象的列表。 正因为这样，_WeakSet_ 是不可枚举的。
+> 
+_WeakMap_ 对象也是键值对的集合。它的**键必须是对象类型**，值可以是任意类型。它的键被弱保持，也就是说，当其键所指对象没有其他地方引用的时候，它会被 _GC_ 回收掉。_WeakMap_ 提供的接口与 _Map_ 相同。
+> 与 _Map_ 对象不同的是，_WeakMap_ 的键是不可枚举的。不提供列出其键的方法。列表是否存在取决于垃圾回收器的状态，是不可预知
+
+### 56. 闭包、作用域（可以扩充到作用域链）
+
+> 参考答案：
+>  
+> **什么是作业域?**
+>  
+> ES5 中只存在两种作用域：全局作用域和函数作用域。在 JavaScript 中，我们将作用域定义为一套规则，这套规则用来管理引擎如何在当前作用域以及嵌套子作用域中根据标识符名称进行变量(变量名或者函数名)查找。
+>  
+> **什么是作用域链?**
+>  
+> 当访问一个变量时，编译器在执行这段代码时，会首先从当前的作用域中查找是否有这个标识符，如果没有找到，就会去父作用域查找，如果父作用域还没找到继续向上查找，直到全局作用域为止,，而作用域链，就是有当前作用域与上层作用域的一系列变量对象组成，它保证了当前执行的作用域对符合访问权限的变量和函数的有序访问。
+>  
+> **闭包产生的本质**
+>  
+> 当前环境中存在指向父级作用域的引用
+>  
+> **什么是闭包**
+>  
+> 闭包是一种特殊的对象，它由两部分组成：执行上下文(代号 A)，以及在该执行上下文中创建的函数 (代号 B)，当 B 执行时，如果访问了 A 中变量对象的值，那么闭包就会产生，且在 Chrome 中使用这个执行上下文 A 的函数名代指闭包。
+>  
+> **一般如何产生闭包**
+>  
+> - 返回函数
+> - 函数当做参数传递
+> 
+
+> **闭包的应用场景**
+>  
+> - 柯里化 bind
+> - 模块
+
+
+### 58. 实现一个函数,对一个url进行请求,失败就再次请求,超过最大次数就走失败回调,任何一次成功都走成功回调 
+```javascript
+/**
+ @params url: 请求接口地址;
+ @params body: 设置的请求体;
+ @params succ: 请求成功后的回调
+ @params error: 请求失败后的回调
+ @params maxCount: 设置请求的数量
+*/
+function request(url, body, succ, error, maxCount = 5) {
+ return fetch(url, body)
+     .then(res => succ(res))
+     .catch(err => {
+         if (maxCount <= 0) return error('请求超时');
+         return request(url, body, succ, error, --maxCount);
+     });
+}
+
+// 调用请求函数
+request('https://java.some.com/pc/reqCount', { method: 'GET', headers: {} },
+ (res) => {
+     console.log(res.data);
+ },
+ (err) => {
+     console.log(err);
+ })
+```
+
+### 62. promise 代码题
+
+```javascript
+new Promise((resolve, reject) => {
+    reject(1);
+    console.log(2);
+    resolve(3);
+    console.log(4);
+}).then((res) => { console.log(res) })
+    .catch(res => { console.log('reject1') })
+try {
+    new Promise((resolve, reject) => {
+        throw 'error'
+    }).then((res) => { console.log(res) })
+        .catch(res => { console.log('reject2') })
+} catch (err) {
+    console.log(err)
+}
+```
+### 63. _proxy_ 是实现代理，可以改变 _js_ 底层的实现方式, 然后说了一下和 _Object.defineProperty_ 的区别
+> **Proxy 的优势如下:**
+> - _Object.defineProperty_ 只能劫持对象的属性,因此我们需要对每个对象的每个属性进行遍历，而 _Proxy_ 可以直接监听对象而非属性；
+> - _Object.defineProperty_ 无法监控到数组下标的变化，而 _Proxy_ 可以直接监听数组的变化；
+> - _Proxy_ 有多达 _13_ 种拦截方法；
+> - _Proxy_ 作为新标准将受到浏览器厂商重点持续的性能优化；
+
+
+> 两者的区别总结如下： 
+> - 代理原理：Object.defineProperty的原理是通过将数据属性转变为存取器属性的方式实现的属性读写代理。而Proxy则是因为这个内置的Proxy对象内部有一套监听机制，在传入handler对象作为参数构造代理对象后，一旦代理对象的某个操作触发，就会进入handler中对应注册的处理函数，此时我们就可以有选择的使用Reflect将操作转发被代理对象上。
+> - 代理局限性：Object.defineProperty始终还是局限于**属性层面**的读写代理，对于**对象层面以及属性的其它操作**代理它都无法实现。鉴于此，由于数组对象push、pop等方法的存在，它对于数组元素的读写代理实现的并不完全。**而使用Proxy则可以很方便的监视数组操作。**
+> - 自我代理：Object.defineProperty方式可以代理到自身（代理之后使用对象本身即可），也可以代理到别的对象身上（代理之后需要使用代理对象）。Proxy方式只能代理到Proxy实例对象上。这一点在其它说法中是Proxy对象不需要侵入对象就可以实现代理，实际上Object.defineProperty方式也可以不侵入。
+
+> 在 _JavaScript_ 中，通过 _Object.defineProperty_ 方法可以设置对象属性的特性，选项如下：
+>  
+> - _get_：一旦目标属性被访问时，就会调用相应的方法
+> - _set_：一旦目标属性被设置时，就会调用相应的方法
+> - _value_：这是属性的值，默认是 _undefined_
+> - _writable_：这是一个布尔值，表示一个属性是否可以被修改，默认是 _true_
+> - _enumerable_：这是一个布尔值，表示在用 _for-in_ 循环遍历对象的属性时，该属性是否可以显示出来，默认值为 _true_
+> - _configurable_：这是一个布尔值，表示我们是否能够删除一个属性或者修改属性的特性，默认值为 _true_ 
+
+> ##### 1、_Object.defineproperty_
+> 可以用于监听对象的数据变化
+> 语法： **_Object.defineproperty(obj, key, descriptor)_**
+> 此外 还有以下配置项 ：
+> - _configurable_
+> - _enumerable_
+> - _value_
+> 
+缺点：
+> 1.  无法监听数组变化 
+> 1.  只能劫持对象的属性，属性值也是对象那么需要深度遍历 
+> ##### 2、_proxy_ ：可以理解为在被劫持的对象之前 加了一层拦截
+> - _proxy_ 返回的是一个新对象， 可以通过操作返回的新的对象达到目的
+> - _proxy_ 有多达 _13_ 种拦截方法
+> 
+**总结：**
+> - _Object.defineProperty_ 无法监控到数组下标的变化，导致通过数组下标添加元素，不能实时响应
+> - _Object.defineProperty_ 只能劫持对象的属性，从而需要对每个对象，每个属性进行遍历，如果，属性值是对象，还需要深度遍历。_Proxy_ 可以劫持整个对象，并返回一个新的对象。
+> - _Proxy_ 不仅可以代理对象，还可以代理数组。还可以代理动态增加的属性。
+> 
+
+
+```javascript
+let obj = {
+ age: 11
+}
+let value = 'xiaoxiao';
+//defineproperty 有 gettter 和 setter
+Object.defineproperty(obj, 'name', {
+ get() {
+     return value
+ },
+ set(newValue) {
+     value = newValue
+ }
+})
+obj.name = 'pengpeng';
+```
+```javascript
+let proxy = new Proxy({}, {
+    get(obj, prop) {
+        return obj[prop]
+    },
+    set(obj, prop, val) {
+        obj[prop] = val
+    }
+})
+```
