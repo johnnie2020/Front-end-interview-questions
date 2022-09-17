@@ -617,3 +617,356 @@ let proxy = new Proxy({}, {
     }
 })
 ```
+
+### 深拷贝
+> **递归容易造成爆栈，尾部调用可以解决递归的这个问题，**_Chrome_ 的 _V8_ 引擎做了尾部调用优化，我们在写代码的时候也要注意尾部调用写法。递归的爆栈问题可以通过将递归改写成枚举的方式来解决，就是通过 _for_ 或者 _while_ 来代替递归。
+
+```
+function deepClone(o1, o2) {
+    for (let k in o2) {
+        if (typeof o2[k] === 'object') {
+            o1[k] = {};
+            deepClone(o1[k], o2[k]);
+        } else {
+            o1[k] = o2[k];
+        }
+    }
+}
+// 测试用例
+let obj = {
+    a: 1,
+    b: [1, 2, 3],
+    c: {}
+};
+let emptyObj = Object.create(null);
+deepClone(emptyObj, obj);
+console.log(emptyObj.a == obj.a);
+console.log(emptyObj.b == obj.b);
+```
+### _instanceof_ 是如何实现？
+> 例如：_[ ] instanceof Object_ 返回的也会是 _true_。
+
+```javascript
+instanceof (A,B) = {
+    varL = A.__proto__;
+    varR = B.prototype;
+    if(L === R) {
+        // A的内部属性 __proto__ 指向 B 的原型对象
+        return true;
+    }
+    return false;
+}
+```
+### 75. _JS_的垃圾回收站机制
+> _JS_ 具有自动垃圾回收机制。垃圾收集器会按照**固定的时间间隔周期性**的执行。
+> _JS_ 常见的垃圾回收方式：标记清除、引用计数方式。
+> 1、标记清除方式：
+> -  工作原理：当变量进入环境时，将这个变量标记为“进入环境”。当变量离开环境时，则将其标记为“离开环境”。标记“离开环境”的就回收内存。 
+> -  工作流程： 
+> -  垃圾回收器，在运行的时候会给存储在内存中的所有变量都加上标记； 
+> -  去掉环境中的变量以及被环境中的变量引用的变量的标记； 
+> -  被加上标记的会被视为准备删除的变量； 
+> -  垃圾回收器完成内存清理工作，销毁那些带标记的值并回收他们所占用的内存空间。 
+> 
+2、引用计数方式：
+> -  工作原理：跟踪记录每个值被引用的次数。 
+> -  工作流程： 
+> -  声明了一个变量并将一个引用类型的值赋值给这个变量，这个引用类型值的引用次数就是 _1_； 
+> -  同一个值又被赋值给另一个变量，这个引用类型值的引用次数加1； 
+> -  当包含这个引用类型值的变量又被赋值成另一个值了，那么这个引用类型值的引用次数减 _1_； 
+> -  当引用次数变成 _0_ 时，说明没办法访问这个值了； 
+> -  当垃圾收集器下一次运行时，它就会释放引用次数是0的值所占的内存。 
+
+### 76. 什么是作用域链、原型链
+> **什么是作用域链?**
+>  
+> 当访问一个变量时，编译器在执行这段代码时，会首先从当前的作用域中查找是否有这个标识符，如果没有找到，就会去父作用域查找，如果父作用域还没找到继续向上查找，直到全局作用域为止,，而作用域链，就是有当前作用域与上层作用域的一系列变量对象组成，它保证了当前执行的作用域对符合访问权限的变量和函数的有序访问。
+>  
+> **什么原型链?**
+>  
+> 每个对象都可以有一个原型__*proto*__，这个原型还可以有它自己的原型，以此类推，形成一个原型链。查找特定属性的时候，我们先去这个对象里去找，如果没有的话就去它的原型对象里面去，如果还是没有的话再去向原型对象的原型对象里去寻找。这个操作被委托在整个原型链上，这个就是我们说的原型链。
+
+### 79. 什么是变量提升
+> 参考答案：
+>  
+> 当 _JavaScript_ 编译所有代码时，所有使用 _var_ 的变量声明都被提升到它们的函数/局部作用域的顶部(如果在函数内部声明的话)，或者提升到它们的全局作用域的顶部(如果在函数外部声明的话)，而不管实际的声明是在哪里进行的。这就是我们所说的“提升”。
+>  
+> 请记住，这种“提升”实际上并不发生在你的代码中，而只是一种比喻，与 _JavaScript_ 编译器如何读取你的代码有关。记住当我们想到“提升”的时候，我们可以想象任何被提升的东西都会被移动到顶部，但是实际上你的代码并不会被修改。
+>  
+> 函数声明也会被提升，但是被提升到了最顶端，所以将位于所有变量声明之上。
+>  
+> 在编译阶段变量和函数声明会被放入内存中，但是你在代码中编写它们的位置会保持不变。
+
+### 81. _Object.is_ 方法比较的是什么
+> _Object.is_ 方法是 _ES6_ 新增的用来比较两个值是否严格相等的方法，与 === (严格相等)的行为基本一致。不过有两处不同：
+> - +0 不等于 -0。
+> - _NaN_ 等于自身。
+> 
+所以可以将_Object.is_ 方法看作是加强版的严格相等。
+
+### 82. 基础数据类型和引用数据类型，哪个是保存在栈内存中？哪个是在堆内存中？
+> 在 _ECMAScript_ 规范中，共定义了 _7_ 种数据类型，分为 **基本类型** 和 **引用类型** 两大类，如下所示：
+>  
+> -  **基本类型**：_String、Number、Boolean、Symbol、Undefined、Null_ 
+> -  **引用类型**：_Object_ 
+> 
+
+> 基本类型也称为简单类型，由于其占据空间固定，是简单的数据段，为了便于提升变量查询速度，将其存储在栈中，即按值访问。
+>  
+> 引用类型也称为复杂类型，由于其值的大小会改变，所以不能将其存放在栈中，否则会降低变量查询速度，因此，其值存储在堆(_heap_)中，而存储在变量处的值，是一个指针，指向存储对象的内存处，即按址访问。引用类型除 _Object_ 外，还包括 _Function 、Array、RegExp、Date_ 等等。
+
+
+### 85. _promise_ 的其他方法有用过吗？如 _all、race_。请说下这两者的区别
+> _promise.all_ 方法参数是一个 _promise_ 的数组,只有当所有的 _promise_ 都完成并返回成功，才会调用 _resolve_，当有一个失败，都会进_catch_，被捕获错误，_promise.all_ 调用成功返回的结果是每个 _promise_ 单独调用成功之后返回的结果组成的数组,如果调用失败的话，返回的则是第一个 _reject_ 的结果
+>  
+> _promise.race_ 也会调用所有的 _promise_，返回的结果则是所有 _promise_ 中最先返回的结果，不关心是成功还是失败。
+
+
+### 86. _class_ 是如何实现的
+> _class_ 是 _ES6_ 新推出的关键字，它是一个语法糖，本质上就是基于这个原型实现的。只不过在以前 _ES5_ 原型实现的基础上，添加了一些 *_classCallCheck、_defineProperties、_createClass*等方法来做出了一些特殊的处理。
+> 
+
+```javascript
+class Hello {
+constructor(x) {
+  this.x = x;
+}
+greet() {
+  console.log("Hello, " + this.x)
+}
+}
+```
+```javascript
+"use strict";
+
+function _classCallCheck(instance, Constructor) {
+if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+}
+}
+
+function _defineProperties(target, props) {
+for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor)
+        descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+}
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+console.log("Constructor::",Constructor);
+console.log("protoProps::",protoProps);
+console.log("staticProps::",staticProps);
+if (protoProps)
+    _defineProperties(Constructor.prototype, protoProps);
+if (staticProps)
+    _defineProperties(Constructor, staticProps);
+return Constructor;
+}
+
+var Hello = /*#__PURE__*/function () {
+function Hello(x) {
+  _classCallCheck(this, Hello);
+
+  this.x = x;
+}
+
+_createClass(Hello, [{
+  key: "greet",
+  value: function greet() {
+    console.log("Hello, " + this.x);
+  }
+	}]);
+
+	return Hello;
+}();
+```
+
+### 88. _ES6_ 中模块化导入和导出与 _common.js_ 有什么区别
+> CommonJs模块输出的是值的拷贝，也就是说，一旦输出一个值，模块内部的变化不会影响到这个值.
+> 你可以看到明明common.js里面改变了count，但是输出的结果还是原来的。这是因为count是一个原始类型的值，会被缓存。除非写成一个函数，才能得到内部变动的值。将common.js里面的module.exports 改写成
+> 这样子的输出结果是 1，2，2
+> 而在ES6当中，写法是这样的，是利用export 和import导入的
+> ES6 模块是动态引用，并且不会缓存，模块里面的变量绑定其所有的模块，而是动态地去加载值，并且不能重新赋值，
+> ES6 输入的模块变量，只是一个“符号连接符”，所以这个变量是只读的，对它进行重新赋值会报错。如果是引用类型，变量指向的地址是只读的，但是可以为其添加属性或成员。 
+> 另外还想说一个 _export default_
+> export与export default的区别及联系：
+> 1.  export与export default均可用于导出常量、函数、文件、模块等 
+> 1.  你可以在其它文件或模块中通过 import + (常量 | 函数 | 文件 | 模块)名的方式，将其导入，以便能够对其进行使用 
+> 1.  在一个文件或模块中，export、import可以有多个，export default仅有一个 
+> 1.  通过export方式导出，在导入时要加{ }，export default则不需要。
+
+### 92. 了解过 _js_ 中 _arguments_ 吗？接收的是实参还是形参？
+> _JS_ 中的 _arguments_ 是一个伪数组对象。这个伪数组对象将包含调用函数时传递的所有的实参。
+>  与之相对的，_JS_ 中的函数还有一个 _length_ 属性，返回的是函数形参的个数。
+
+### 95. 纯函数
+> 一个函数，如果符合以下两个特点，那么它就可以称之为**纯函数**： 
+> 1. 对于相同的输入，永远得到相同的输出
+> 1. 没有任何可观察到的副作用
+
+
+> 针对上面的两个特点，我们一个一个来看。
+>  
+> - 相同输入得到相同输出
+> 
+
+> 我们先来看一个不纯的反面典型：
+> 
+> 上面的代码中，_greet('World')_ 是不是永远返回 _Hello World_ ? 显然不是，假如我们修改 _greeting_ 的值，就会影响 _greet_ 函数的输出。即函数 _greet_ 其实是 **依赖外部状态** 的。
+>  
+> 那我们做以下修改：
+> 将 _greeting_ 参数也传入，这样对于任何输入参数，都有与之对应的唯一的输出参数了，该函数就符合了第一个特点。
+>  
+> - 没有副作用
+> 
+
+> 副作用的意思是，这个函数的运行，**不会修改外部的状态**。
+
+### 96. _JS_ 模块化
+> 模块化主要是用来抽离公共代码，隔离作用域，避免变量冲突等。
+>  模块化的整个发展历史如下：
+>  **IIFE**： 使用自执行函数来编写模块化，特点：**在一个单独的函数作用域中执行代码，避免变量冲突**。
+>  **AMD**： 使用requireJS 来编写模块化，特点：**依赖必须提前声明好**。
+>  **CMD**： 使用seaJS 来编写模块化，特点：**支持动态引入依赖文件**。
+>  **CommonJS**： nodejs 中自带的模块化。
+>  **UMD**：兼容AMD，CommonJS 模块化语法。
+> **webpack(require.ensure)**：webpack 2.x 版本中的代码分割。
+> **ES Modules**： ES6 引入的模块化，支持import 来引入另一个 js 。
+
+### 97. 看过 _jquery_ 源码吗？
+> 开放题，但是需要注意的是，如果看过 _jquery_ 源码，不要简单的回答一个“看过”就完了，应该继续乘胜追击，告诉面试官例如哪个哪个部分是怎么怎么实现的，并针对这部分的源码实现，可以发表一些自己的看法和感想。
+
+### 101. == 隐试转换的原理？是怎么转换的
+> **两个与类型转换有关的函数：valueOf()和toString()** 
+> - valueOf()的语义是，返回这个对象逻辑上对应的原始类型的值。比如说，String包装对象的valueOf()，应该返回这个对象所包装的字符串。
+> - toString()的语义是，返回这个对象的字符串表示。用一个字符串来描述这个对象的内容。
+> 
+valueOf()和toString()是定义在Object.prototype上的方法，也就是说，所有的对象都会继承到这两个方法。但是在Object.prototype上定义的这两个方法往往不能满足我们的需求（Object.prototype.valueOf()仅仅返回对象本身），因此js的许多内置对象都重写了这两个函数，以实现更适合自身的功能需要（比如说，String.prototype.valueOf就覆盖了在Object.prototype中定义的valueOf）。当我们自定义对象的时候，最好也重写这个方法。重写这个方法时要遵循上面所说的语义。
+>  
+> **js内部用于实现类型转换的4个函数**
+>  
+> 这4个方法实际上是ECMAScript定义的4个抽象的操作，它们在js内部使用，进行类型转换。js的使用者不能直接调用这些函数。
+>  
+> - ToPrimitive ( input [ , PreferredType ] )
+> - ToBoolean ( argument )
+> - ToNumber ( argument )
+> - ToString ( argument )
+> 
+
+> 需要区分这里的 ToString() 和上文谈到的 toString()，一个是 js 引擎内部使用的函数，另一个是定义在对象上的函数。
+>  
+> （1）ToPrimitive ( input [ , PreferredType ] )
+>  
+> 将 input 转化成一个原始类型的值。PreferredType参数要么不传入，要么是Number 或 String。**如果PreferredType参数是Number**，ToPrimitive这样执行：
+>  
+> 1. 如果input本身就是原始类型，直接返回input。
+> 1. 调用**input.valueOf()**，如果结果是原始类型，则返回这个结果。
+> 1. 调用**input.toString()**，如果结果是原始类型，则返回这个结果。
+> 1. 抛出TypeError异常。
+> 
+
+> **以下是PreferredType不为Number时的执行顺序。**
+>  
+> - 如果PreferredType参数是String，则交换上面这个过程的第2和第3步的顺序，其他执行过程相同。
+> - 如果PreferredType参数没有传入 
+>    - 如果input是内置的Date类型，PreferredType 视为String
+>    - 否则PreferredType 视为 Number
+> 
+
+> **可以看出，ToPrimitive依赖于valueOf和toString的实现。**
+>  
+> （2）ToBoolean ( argument )
+> ![image.png](https://cdn.nlark.com/yuque/0/2021/png/758572/1638069365210-5a72d2c7-472f-4cca-9a9d-7486a90eac8f.png#clientId=ub7d735a1-a078-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=452&id=u956e7de5&margin=%5Bobject%20Object%5D&name=image.png&originHeight=904&originWidth=1462&originalType=binary&ratio=1&rotation=0&showTitle=false&size=272109&status=done&style=none&taskId=u8ec62db3-9697-4619-9675-b149513bbbe&title=&width=731)
+> 
+只需要记忆 0, null, undefined, NaN, "" 返回 false 就可以了，其他一律返回 true。
+> （3）ToNumber ( argument )
+> 
+> ToNumber的转化并不总是成功，有时会转化成NaN，有时则直接抛出异常。
+> （4）ToString ( argument )
+> 
+> 当js期望得到某种类型的值，而实际在那里的值是其他的类型，就会发生隐式类型转换。系统内部会自动调用我们前面说ToBoolean ( argument )、ToNumber ( argument )、ToString ( argument )，尝试转换成期望的数据类型。
+
+### 102. ['1', '2', '3'].map(parseInt) 结果是什么，为什么 （字节）
+> [1, NaN, NaN]
+
+> 1. _map_ 函数
+> 
+将数组的每个元素传递给指定的函数处理，并返回处理后的数组，所以 _['1','2','3'].map(parseInt)_ 就是将字符串 _1，2，3_ 作为元素；_0，1，2_ 作为下标分别调用 _parseInt_ 函数。即分别求出 _parseInt('1',0), parseInt('2',1), parseInt('3',2)_ 的结果。
+> 2. _parseInt_ 函数（重点）
+> 
+概念：以第二个参数为基数来解析第一个参数字符串，通常用来做十进制的向上取整（省略小数）如：parseInt(2.7) //结果为2
+> 特点：接收两个参数 _parseInt(string,radix)_
+> _string_：字母（大小写均可）、数组、特殊字符（不可放在开头,特殊字符及特殊字符后面的内容不做解析）的任意字符串，如 '2'、'2w'、'2!'
+> _radix_：解析字符串的基数，基数规则如下：
+> 1）   区间范围介于 _2~36_ 之间；
+> 2 ）  当参数为 _0_，_parseInt( )_ 会根据十进制来解析；
+> 3 ）  如果忽略该参数，默认的基数规则：
+> 		如果 _string_ 以 "0x" 开头，parseInt() 会把 string 的其余部分解析为十六进制的整数；parseInt("0xf")   // 15
+		如果 _string_ 以 0 开头，其后的字符解析为八进制或十六进制的数字；parseInt("08")   // 8
+		如果 _string_ 以 1 ~ 9 的数字开头，parseInt() 将把它解析为十进制的整数；parseInt("88.99f")   // 88
+		只有字符串中的第一个数字会被返回。parseInt("10.33")   // 返回10；
+		开头和结尾的空格是允许的。parseInt(" 69 10 ")   // 返回69
+		如果字符串的第一个字符不能被转换为数字，返回 NaN。parseInt("f")  // 返回 NaN  而 parseInt("f"，16)  // 返回15
+>  
+> 二、_parseInt_ 方法解析的运算过程
+>  
+> parseInt('101.55',10); // 以十进制解析，运算过程：向上取整数(不做四舍五入，省略小数)，结果为 101。
+>  
+> parseInt('101',2);  // 以二进制解析，运算过程：1_2的2次方+0_2的1次方+1*2的0次方=4+0+1=5，结果为 5。
+>  
+> parseInt('101',8);  // 以八进制解析，运算过程：1_8的2次方+0_8的1次方+1*8的0次方=64+0+1=65，结果为 65。
+>  
+> parseInt('101',16);  // 以十六进制解析，运算过程：1_16的2次方+0_16的1次方+1*16的0次方=256+0+1=257，结果为 257。
+>  
+> 三、再来分析一下结果
+>  
+> _['1','2','3'].map(parseInt)_ 即
+>  
+> parseInt('1',0); radix 为 0，parseInt( ) 会根据十进制来解析，所以结果为 _1_；
+>  
+> parseInt('2',1); radix 为 1，超出区间范围，所以结果为 _NaN_；
+>  
+> parseInt('3',2); radix 为 2，用2进制来解析，应以 _0_ 和 _1_ 开头，所以结果为 _NaN_
+
+
+### 107. 情人节福利题，如何实现一个 _new_ （字节）
+
+> 参考答案：
+首先我们需要明白 _new_ 的原理。关于 _new_ 的原理，主要分为以下几步：
+> -  创建一个空对象 。 
+> -  由 _this_ 变量引用该对象 。 
+> -  该对象继承该函数的原型(更改原型链的指向) 。 
+> -  把属性和方法加入到 _this_ 引用的对象中。 
+> -  新创建的对象由 _this_ 引用 ，最后**隐式地**返回 _this_ 
+
+```javascript
+// 构造器函数
+let Parent = function (name, age) {
+ this.name = name;
+ this.age = age;
+};
+Parent.prototype.sayName = function () {
+ console.log(this.name);
+};
+//自己定义的new方法
+let newMethod = function (Parent, ...rest) {
+ // 1.以构造器的prototype属性为原型，创建新对象；
+ let child = Object.create(Parent.prototype);
+ // 2.将this和调用参数传给构造器执行
+ let result = Parent.apply(child, rest);
+ // 3.如果构造器没有手动返回对象，则返回第一步的对象
+ return typeof result === 'object' ? result : child;
+};
+//创建实例，将构造函数Parent与形参作为参数传入
+const child = newMethod(Parent, 'echo', 26);
+child.sayName() //'echo';
+//最后检验，与使用new的效果相同
+console.log(child instanceof Parent)//true
+console.log(child.hasOwnProperty('name'))//true
+console.log(child.hasOwnProperty('age'))//true
+console.log(child.hasOwnProperty('sayName'))//false
+```
