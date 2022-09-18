@@ -970,3 +970,485 @@ console.log(child.hasOwnProperty('name'))//true
 console.log(child.hasOwnProperty('age'))//true
 console.log(child.hasOwnProperty('sayName'))//false
 ```
+
+### 108. 实现一个 _sleep_ 函数（字节）
+> 这种实现方式是利用一个**伪死循环阻塞主线程**。因为 _JS_ 是单线程的。所以通过这种方式可以实现真正意义上的 _sleep_。
+
+```javascript
+function sleep(delay) {
+ var start = (new Date()).getTime();
+ while ((new Date()).getTime() - start < delay) {
+     continue;
+ }
+}
+
+function test() {
+ console.log('111');
+ sleep(2000);
+ console.log('222');
+}
+
+test()
+```
+
+### 109. 使用 sort() 对数组 [3, 15, 8, 29, 102, 22] 进行排序，输出结果 （字节） 
+> _sort_ 方法默认按照 _ASCII_ 码来排序，**如果要按照数字大小来排序，需要传入一个回调函数**，如下：
+
+```javascript
+[3, 15, 8, 29, 102, 22].sort((a,b) => {return a - b});
+```
+
+### 110. 实现 5.add(3).sub(2) (百度)
+
+> 参考答案：
+>  
+> 这里想要实现的是链式操作，那么我们可以考虑在 _Number_ 类型的原型上添加 _add_ 和 _sub_ 方法，这两个方法返回新的数
+>  
+> 示例如下：
+>  
+>  
+
+```javascript
+Number.prototype.add = function (number) {
+ if (typeof number !== 'number') {
+     throw new Error('请输入数字～');
+ }
+ return this.valueOf() + number;
+};
+Number.prototype.minus = function (number) {
+ if (typeof number !== 'number') {
+     throw new Error('请输入数字～');
+ }
+ return this.valueOf() - number;
+};
+console.log((5).add(3).minus(2)); // 6
+```
+
+### 111. 给定两个数组，求交集
+```javascript
+const arr1 = [1, 2, 3]
+const arr2 = [2, 3, 4]
+const arr = []
+arr2.forEach((ele) => {
+    if (arr1.includes(ele)) {
+        arr.push(ele)
+    }
+})
+console.log(arr)
+```
+### 112. 为什么普通 _for_ 循环的性能远远高于 _forEach_ 的性能，请解释其中的原因。
+> _for_ 循环按顺序遍历，_forEach_ 使用 _iterator_ 迭代器遍历
+>  
+>  在10万这个级别下，`forEach`的性能是`for`的十倍
+>  在100万这个量级下，`forEach`的性能是和`for`的一致
+>  在1000万级以上的量级上 ，`forEach`的性能远远低于`for`的性能
+>  
+> 我们从语法上面来观察：
+>  
+> 可以看到 _forEach_ 是有回调的，它会按升序为数组中含有效值的每一项执行一次 _callback_，且除了抛出异常以外，**也没有办法中止或者跳出 **_**forEach**_** 循**环。那这样的话执行**就会额外的调用栈和函数内的上下文**。
+> **而 **_**for**_** 循环则是底层写法，不会产生额外的消耗。**
+> 在实际业务中没有很大的数组时，_for_ 和 _forEach_ 的性能差距其实很小，_forEach_ 甚至会优于 _for_ 的时间，且更加简洁，可读性也更高，一般也会优先使用 _forEach_ 方法来进行数组的循环处理。
+
+```javascript
+let arrs = new Array(100000);
+console.time('for');
+for (let i = 0; i < arrs.length; i++) {
+};
+console.timeEnd('for');
+console.time('forEach');
+arrs.forEach((arr) => {
+});
+console.timeEnd('forEach');
+
+for: 2.263ms
+forEach: 0.254ms
+```
+```javascript
+for: 2.263ms
+forEach: 0.254ms
+```
+```javascript
+for: 2.844ms
+forEach: 2.652ms
+```
+```javascript
+for: 8.422ms
+forEach: 30.328m
+```
+```javascript
+arr.forEach(callback(currentValue [, index [, array]])[, thisArg])
+```
+
+### 113. 实现一个字符串匹配算法，从长度为 n 的字符串 S 中，查找是否存在字符串 T，T 的长度是 m，若存在返回所在位置。
+```javascript
+// 完全不用 API
+var getIndexOf = function (s, t) {
+ let n = s.length;
+ let m = t.length;
+ if (!n || !m || n < m) return -1;
+ for (let i = 0; i < n; i++) {
+     let j = 0;
+     let k = i;
+     if (s[k] === t[j]) {
+         k++; j++;
+         while (k < n && j < m) {
+             if (s[k] !== t[j]) break;
+             else {
+                 k++; j++;
+             }
+         }
+         if (j === m) return i;
+     }
+ }
+ return -1;
+}
+
+// 测试
+console.log(getIndexOf("Hello World", "rl"))
+```
+
+### 114. 使用_ Proxy_ 实现简单的数据绑定
+
+```html
+<body>
+  hello,world
+  <input type="text" id="model">
+  <p id="word"></p>
+</body>
+<script>
+  const model = document.getElementById("model")
+  const word = document.getElementById("word")
+  var obj= {};
+  
+  const newObj = new Proxy(obj, {
+    get: function(target, key, receiver) {
+      console.log(`getting ${key}!`);
+      return Reflect.get(target, key, receiver);
+    },
+    set: function(target, key, value, receiver) {
+      console.log('setting',target, key, value, receiver);
+      if (key === "text") {
+        model.value = value;
+        word.innerHTML = value;
+      }
+      return Reflect.set(target, key, value, receiver);
+    }
+  });
+  
+  model.addEventListener("keyup",function(e){
+    newObj.text = e.target.value
+  })
+</script>
+```
+
+### 115. 数组里面有 _10_ 万个数据，取第一个元素和第 _10_ 万个元素的时间相差多少（字节）
+> 消耗时间几乎一致，差异可以忽略不计 
+
+> - 数组可以直接根据**索引**取的对应的元素，所以不管取哪个位置的元素的**时间复杂度都是 O(1)**
+> - _**JavaScript**_** 没有真正意义上的数组，所有的数组其实是对象**，其“索引”看起来是数字，其实会被转换成字符串，作为属性名（对象的 _key_）来使用。所以无论是取第 _1_ 个还是取第 _10_ 万个元素，都是**用 **_**key**_** 精确查找哈希表的过程，**其消耗时间大致相同。
+
+### 116. 打印出 _1~10000_ 以内的对称数
+```javascript
+function isSymmetryNum(start, end) {
+ for (var i = start; i < end + 1; i++) {
+     var iInversionNumber = +(i.toString().split("").reverse().join(""));
+     if (iInversionNumber === i && i > 10) {
+         console.log(i);
+     }
+ }
+}
+isSymmetryNum(1, 10000);
+```
+
+### 117. 简述同步和异步的区别
+> **同步意味着每一个操作必须等待前一个操作完成后才能执行。
+异步意味着操作不需要等待其他操作完成后才开始执行。**
+在 _JavaScript_ 中，由于单线程的特性导致所有代码都是同步的。但是，有些异步操作（例如：`XMLHttpRequest` 或 `setTimeout`）并不是由主线程进行处理的，他们由本机代码（浏览器 API）所控制，并不属于程序的一部分。但程序中被执行的回调部分依旧是同步的。
+> **加分回答：**
+> - _JavaScript_ 中的同步任务是指在主线程上排队执行的任务，只有前一个任务执行完成后才能执行后一个任务；异步任务是指进入任务队列（_task queue_）而非主线程的任务，只有当任务队列通知主线程，某个异步任务可以执行了，该任务才会进入主线程中进行执行。
+> - _JavaScript_ 的并发模型是基于** “**_**event loop**_**”。**
+> - 像 `alert` 这样的方法回**阻塞主线程**，以致用户关闭他后才能继续进行后续的操作。
+> - _JavaScript_ 主要用于和用户互动及操作 DOM，多线程的情况和异步操作带来的复杂性相比决定了他单线程的特性。
+> - _**Web Worker**_** 虽然允许 **_**JavaScript**_** 创建多个线程，但子线程完全受主线程控制，且不能操作 **_**DOM**_**。因此他还是保持了单线程的特性。**
+
+
+### 118. 怎么添加、移除、复制、创建、和查找节点
+> 1）创建新节点
+> _createDocumentFragment_( )  // 创建一个_DOM_ 片段
+> _createElement_( )  // 创建一个具体的元素
+> _createTextNode_( ) // 创建一个文本节点
+> （2）添加、移除、替换、插入
+> _appendChild_( )
+> _removeChild_( )
+> _replaceChild_( )
+> _insertBefore_( ) // 在已有的子节点前插入一个新的子节点
+> （3）查找
+> _getElementsByTagName_( )  //通过标签名称
+> _getElementsByName_( ) // 通过元素的 _Name_ 属性的值
+> _getElementById_( ) // 通过元素 _Id_，唯一性
+> _querySelector_( ) // 用于接收一个 _CSS_ 选择符，返回与该模式匹配的第一个元素
+> _querySelectorAll_( ) // 用于选择匹配到的所有元素
+
+
+### 119. 实现一个函数 _clone_ 可以对 _Javascript_ 中的五种主要数据类型（_Number、string、 Object、Array、Boolean_）进行复制
+```javascript
+/**
+* 对象克隆
+* 支持基本数据类型及对象
+* 递归方法
+*/
+function clone(obj) {
+    var o;
+    switch (typeof obj) {
+        case "undefined":
+            break;
+        case "string":
+            o = obj + "";
+            break;
+        case "number":
+            o = obj - 0;
+            break;
+        case "boolean":
+            o = obj;
+            break;
+        case "object": // object 分为两种情况 对象（Object）或数组（Array）
+            if (obj === null) {
+                o = null;
+            } else {
+                if (Object.prototype.toString.call(obj).slice(8, -1) === "Array") {
+                    o = [];
+                    for (var i = 0; i < obj.length; i++) {
+                        o.push(clone(obj[i]));
+                    }
+                } else {
+                    o = {};
+                    for (var k in obj) {
+                        o[k] = clone(obj[k]);
+                    }
+                }
+            }
+            break;
+        default:
+            o = obj;
+            break;
+    }
+    return o;
+}
+```
+
+### 121. 写一个返回闭包的函数 
+```javascript
+function foo() {
+ var i = 0;
+ return function () {
+     console.log(i++);
+ }
+}
+var f1 = foo();
+f1(); // 0
+f1(); // 1
+f1(); // 2
+```
+### 122. 使用递归完成 1 到 100 的累加 
+```javascript
+function add(x, y){
+ if(x === y){
+     return x;
+ } else {
+     return y + add(x, y-1);
+ }
+}
+
+console.log(add(1, 100))
+```
+### 129. 说说严格模式的限制
+> 什么是严格模式？
+> 严格模式对 _JavaScript_ 的语法和行为都做了一些更改，消除了语言中一些不合理、不确定、不安全之处；提供高效严谨的差错机制，保证代码安全运行；禁用在未来版本中可能使用的语法，为新版本做好铺垫。在脚本文件第一行或函数内第一行中引入"use strict"这条指令，就能触发严格模式，这是一条没有副作用的指令，老版的浏览器会将其作为一行字符串直接忽略。
+>  
+> 进入严格模式后的限制 
+> - 变量必须声明后再赋值
+> - 不能有重复的参数名，函数的参数也不能有同名属性
+> - 不能使用_with_语句
+> - 不能对只读属性赋值
+> - 不能使用前缀  _0_表示八进制数
+> - 不能删除不可删除的属性
+> - _eval_ 不会在它的外层作用域引入变量。
+> - _eval_和_arguments_不能被重新赋值
+> - _arguments_ 不会自动反应函数的变化
+> - 不能使用 _arguments.callee_
+> - 不能使用 _arguments.caller_
+> - 禁止 _this_ 指向全局对象
+> - 不能使用 _fn.caller_ 和 _fn.arguments_ 获取函数调用的堆栈
+> - 增加了保留字
+
+
+### 130. _attribute_ 和 _property_ 的区别是什么？
+> property 和 attribute 非常容易混淆，两个单词的中文翻译也都非常相近（property：属性，attribute：特性），但实际上，二者是不同的东西，属于不同的范畴。
+>  
+> - **property是DOM中的属性，是JavaScript里的对象；**
+> - **attribute是HTML标签上的特性，它的值只能够是字符串；**
+> 
+
+> 简单理解，Attribute就是dom节点自带的属性，例如html中常用的id、class、title、align等。
+> 而Property是这个DOM元素作为对象，其附加的内容，例如childNodes、firstChild等。
+
+
+### 131. _ES6_ 能写 _class_ 么，为什么会出现 _class_ 这种东西?
+告别了直接使用原型对象模仿面向对象中的类和类继承时代。 
+> 但是 _JS_ 中并没有一个真正的 _class_ 原始类型， _class_ 仅仅只是对原型对象运用语法糖。
+> 之所以出现 _class_ 关键字，是为了使** **_**JS**_** 更像面向对象**，所以 _ES6_ 才引入 _class_ 的概念。
+
+### 135. 为什么 _console.log(0.2+0.1==0.3)  // false_
+> **浮点数不能够进行精确的计算**。并且： 
+> - 不仅 _JavaScript_，所有遵循 _IEEE 754_ 规范的语言都是如此；
+> - **在 **_**JavaScript**_** 中，所有的 **_**Number**_** 都是以 **_**64-bit**_** 的双精度浮点数存储的；**
+> - 双精度的浮点数在这 _64_ 位上划分为 _3_ 段，而这 _3_ 段也就确定了一个浮点数的值，_64bit_ 的划分是“_1-11-52_”的模式，具体来说： 
+>    - 就是 _1_ 位最高位（最左边那一位）表示符号位，_0_ 表示正，_1_ 表示负；
+>    - _11_ 位表示指数部分；
+>    - _52_ 位表示尾数部分，也就是有效域部分
+
+### 137. 深拷贝和浅拷贝的区别？如何实现
+> -  **浅拷贝**：只是拷贝了基本类型的数据，而引用类型数据，复制后也是会发生引用，我们把这种拷贝叫做浅拷贝（浅复制）
+浅拷贝只复制指向某个对象的指针，而不复制对象本身，新旧对象还是共享同一块内存。 
+> -  **深拷贝**：在堆中重新分配内存，并且把源对象所有属性都进行新建拷贝，以保证深拷贝的对象的引用图不包含任何原有对象或对象图上的任何对象，拷贝后的对象与原来的对象是完全隔离，互不影响。 
+> 
+**浅拷贝方法**
+> 1. 直接赋值
+> 1. _Object.assign_ 方法：可以把任意多个的源对象自身的可枚举属性拷贝给目标对象，然后返回目标对象。当拷贝的 _object_ 只有一层的时候，是深拷贝，但是当拷贝的对象属性值又是一个引用时，换句话说有多层时，就是一个浅拷贝。
+> 1. _ES6_ 扩展运算符，当 _object_ 只有一层的时候，也是深拷贝。有多层时是浅拷贝。
+> 1. _Array.prototype.concat_ 方法
+> 1. _Array.prototype.slice_ 方法
+> 1. _jQuery_ 中的 ![](https://g.yuque.com/gr/latex?.extend*%EF%BC%9A%E5%9C%A8%20*jQuery*%20%E4%B8%AD%EF%BC%8C*#card=math&code=.extend%2A%EF%BC%9A%E5%9C%A8%20%2AjQuery%2A%20%E4%B8%AD%EF%BC%8C%2A&id=TtpvW)_.extend(deep,target,object1,objectN)_ 方法可以进行深浅拷贝。_deep_ 如过设为 _true_ 为深拷贝，默认是 _false_ 浅拷贝。
+> 
+
+> **深拷贝方法**
+>  
+> 1. _$.extend(deep,target,object1,objectN)_，将 _deep_ 设置为 _true_
+> 1. _JSON.parse(JSON.stringify)_：用 _JSON.stringify_ 将对象转成 _JSON_ 字符串，再用 _JSON.parse_ 方法把字符串解析成对象，一去一来，新的对象产生了，而且对象会开辟新的栈，实现深拷贝。这种方法虽然可以实现数组或对象深拷贝，但不能处理函数。
+> 1. 手写递归
+
+### 140. 为什么会出现 _setTimeout_ 倒计时误差？如何减少
+> 定时器是属于宏任务(_macrotask_) 。如果**当前执行栈所花费的时间大于定时器时间，那么定时器的回调在宏任务(**_**macrotask**_**) 里，来不及去调用，**所有这个时间会有误差。
+
+### 143. _prototype_ 和 __*proto*__ 区别是什么？
+> _prototype_ 是构造函数上面的一个属性，指向实例化出来对象的原型对象。
+> __*proto*__ 是对象上面的一个隐式属性，指向自己的原型对象
+
+### 145. 取数组的最大值（_ES5、ES6_）
+```javascript
+var arr = [3, 5, 8, 1];
+// ES5 方式
+console.log(Math.max.apply(null, arr)); // 8
+// ES6 方式
+console.log(Math.max(...arr)); // 8
+```
+
+### 
+### _Promise_ 有什么优缺点 ?
+> _Promise_ 的优点是解决了回调地狱，缺点是代码并没有因为新方法的出现而减少，反而变得更加复杂，同时理解难度也加大。所以后面出现了 _async/await_ 的异步解决方案。
+
+### 152. 如何判断 _img_ 加载完成
+>  
+> - 为 _img DOM_ 节点绑定 _load_ 事件
+> - _readystatechange_ 事件：_readyState_ 为 _complete_ 和 _loaded_ 则表明图片已经加载完毕。测试 _IE6-IE10_ 支持该事件，其它浏览器不支持。
+> - _img_ 的 _complete_ 属性：**轮询不断监测 **_**img**_** 的 **_**complete**_** 属性**，如果为 _true_ 则表明图片已经加载完毕，停止轮询。该属性所有浏览器都支持。
+
+
+### 155. 如何用原生 _js_ 给一个按钮绑定两个 _onclick_ 事件？
+> 使用 _addEventListener_ 方法来绑定事件，就可以绑定多个同种类型的事件。
+
+### 156. 拖拽会用到哪些事件 
+> 在以前，书写一个拖拽需要用到 _mousedown、mousemove、mouseup_ 这 _3_ 个事件。
+> _HTML5_ 推出后，新推出了一组拖拽相关的 _API_，涉及到的事件有 _dragstart、dragover、drop_ 这 _3_ 个事件
+
+### 157. _document.write_ 和 _innerHTML_ 的区别
+> _document.write_ 是**直接写入到页面的内容流**，如果在写之前没有调用 _document.open_,  浏览器会自动调用 _open_。每次写完关闭之后重新调用该函数，**会导致页面全部重绘。**
+> _innerHTML_ 则是 _DOM_ 页面元素的一个属性，代表该元素的 _html_ 内容。你可以精确到某一个具体的元素来进行更改。如果想修改 _document_ 的内容，则需要修改 _document.documentElement.innerElement_。
+> _**innerHTML**_** 很多情况下都优于 **_**document.write**_**，其原因在于不会导致页面全部重绘。**
+
+### 158. _jQuery_ 的事件委托方法 _bind 、live、delegate、one、on_ 之间有什么区别？
+
+> 这几个方法都可以实现事件处理。其中 _on_ 集成了事件处理的所有功能，也是目前推荐使用的方法。
+> _one_ 是指添加的是一次性事件，意味着只要触发一次该事件，相应的处理方法执行后就自动被删除。
+> _bind_ 是较早版本的绑定事件的方法，现在已被 _on_ 替代。
+> _live_ 和 _delegate_ 主要用来做事件委托。_live_ 的版本较早，现在已被废弃。_delegate_ 目前仍然可用，不过也可用 _on_ 来替代它
+
+### 159. _$(document).ready_ 方法和 _window.onload_ 有什么区别？
+> 主要有两点区别 
+> 1. 执行时机
+> 
+_window.onload_ 方法是在网页中的所有的元素（包括元素的所有关联文件）都完全加载到浏览器之后才执行。而通过 _jQuery_ 中的`$(document).ready`方法注册的事件处理程序，只要在 _DOM_ 完全就绪时，就可以调用了，比如一张图片只要`<img>`标签完成，不用等这个图片加载完成，就可以设置图片的宽高的属性或样式等。
+> _**onload**_** 即加载完成，**_**ready**_** 即 **_**DOM**_** 准备就绪。**
+> 2. 注册事件
+> 
+`$(document).ready`方法可以多次使用而注册不同的事件处理程序，而 _window.onload_ 一次只能保存对一个函数的引用，多次绑定函数只会覆盖前面的函数。
+
+### 160. jquery 中![](https://g.yuque.com/gr/latex?.get()%E6%8F%90%E4%BA%A4%E5%92%8C#card=math&code=.get%28%29%E6%8F%90%E4%BA%A4%E5%92%8C&id=Ad3s5).post()提交有区别吗？ 
+> 相同点：都是异步请求的方式来获取服务端的数据
+> 不同点：
+> - 请求方式不同：`$.get()` 方法使用 _GET_ 方法来进行异步请求的。`$.post()` 方法使用 _POST_ 方法来进行异步请求的。
+> - 参数传递方式不同： _GET_ 请求会将参数跟在 _URL_ 后进行传递，而 _POST_ 请求则是作为 _HTTP_ 消息的实体内容发送给 _Web_ 服务器 的，这种传递是对用户不可见的。
+> - 数据传输大小不同： _GET_ 方式传输的数据大小不能超过 _2KB_ 而 _POST_ 要大的多
+> - 安全问题： _GET_ 方式请求的数据会被浏览器缓存起来，因此有安全问题。
+
+
+### 161. _await async_ 如何实现 （阿里）
+> **async 函数只是 promise 的语法糖，它的底层实际使用的是 generator**，而 generator 又是基于 promise 的。实际上，在 babel 编译 async 函数的时候，也会转化成 generator函数，并使用自动执行器来执行它。
+>  关于代码的解析，可以参阅：[_https://blog.csdn.net/xgangzai/article/details/106536325_](https://blog.csdn.net/xgangzai/article/details/106536325)
+
+```javascript
+function asyncToGenerator(generatorFunc) {
+ return function() {
+   const gen = generatorFunc.apply(this, arguments)
+   return new Promise((resolve, reject) => {
+     function step(key, arg) {
+       let generatorResult
+       try {
+         generatorResult = gen[key](arg)
+       } catch (error) {
+         return reject(error)
+       }
+       const { value, done } = generatorResult
+       if (done) {
+         return resolve(value)
+       } else {
+         return Promise.resolve(value).then(val => step('next', val), err => step('throw', err))
+       }
+     }
+     step("next")
+   })
+ }
+}
+```
+
+### 162. _clientWidth,offsetWidth,scrollWidth_ 的区别
+> _clientWidth_ = _width_+左右 _padding_
+> _offsetWidth_ = _width_ + 左右 _padding_ + 左右 _boder_
+> _scrollWidth_：获取指定标签内容层的真实宽度(可视区域宽度+被隐藏区域宽度)。
+
+### 163. 产生一个不重复的随机数组
+> 在上面的代码中，我们封装了一个 _randomArr_ 方法来生成这个不重复的随机数组，该方法接收三个参数，_len、min_ 和 _max_，分别表示数组的长度、最小值和最大值。_randomNumBoth_ 方法用来生成随机数。
+
+```javascript
+// 生成随机数
+function randomNumBoth(Min, Max) {
+    return Min + Math.round(Math.random() * (Max - Min)); //四舍五入
+}
+// 生成数组
+function randomArr(len, min, max) {
+    if ((max - min) < len) { //可生成数的范围小于数组长度
+        return null;
+    }
+    var hash = [];
+    while (hash.length < len) {
+        var num = randomNumBoth(min, max);
+
+        if (hash.indexOf(num) == -1) {
+            hash.push(num);
+        }
+    }
+    return hash;
+}
+// 测试
+console.log(randomArr(10, 1, 100));
+```
