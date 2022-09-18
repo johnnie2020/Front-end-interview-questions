@@ -1452,3 +1452,482 @@ function randomArr(len, min, max) {
 // 测试
 console.log(randomArr(10, 1, 100));
 ```
+
+
+### 165. 如何在 _jquery_ 上扩展插件，以及内部原理（腾讯）
+> 通过 _$.extend(object);_ 为整个 _jQuery_ 类添加新的方法。
+>  通过 _$.fn.extend(object);_ 给 _jQuery_ 对象添加方法。
+> **_extend_ 方法内部原理**
+>  对后一个参数进行循环，然后把后面参数上所有的字段都给了第一个字段，若第一个参数里有相同的字段，则进行覆盖操作，否则就添加一个新的字段。
+
+```javascript
+$.extend({
+	 sayHello: function(name) {
+      console.log('Hello,' + (name ? name : 'World') + '!');
+  },
+  showAge(){
+      console.log(18);
+  }
+})
+
+// 外部使用
+$.sayHello(); // Hello,World!  无参调用
+$.sayHello('zhangsan'); // Hello,zhangsan! 带参调用
+```
+```javascript
+$.fn.extend({
+ swiper: function (options) {
+     var obj = new Swiper(options, this); // 实例化 Swiper 对象
+     obj.init(); // 调用对象的 init 方法
+ }
+})
+
+// 外部使用
+$('#id').swiper();
+```
+```javascript
+jQuery.extend( target [, object1 ] [, objectN ] )
+```
+```javascript
+// 为与源码的下标对应上，我们把第一个参数称为第0个参数，依次类推
+jQuery.extend = jQuery.fn.extend = function() {
+ var options, name, src, copy, copyIsArray, clone,
+     target = arguments[0] || {}, // 默认第0个参数为目标参数
+     i = 1,    // i表示从第几个参数凯斯想目标参数进行合并，默认从第1个参数开始向第0个参数进行合并
+     length = arguments.length,
+     deep = false;  // 默认为浅度拷贝
+
+ // 判断第0个参数的类型，若第0个参数是boolean类型，则获取其为true还是false
+ // 同时将第1个参数作为目标参数，i从当前目标参数的下一个
+ // Handle a deep copy situation
+ if ( typeof target === "boolean" ) {
+     deep = target;
+
+     // Skip the boolean and the target
+     target = arguments[ i ] || {};
+     i++;
+ }
+
+ //  判断目标参数的类型，若目标参数既不是object类型，也不是function类型，则为目标参数重新赋值 
+ // Handle case when target is a string or something (possible in deep copy)
+ if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
+     target = {};
+ }
+
+ // 若目标参数后面没有参数了，如$.extend({_name:'wenzi'}), $.extend(true, {_name:'wenzi'})
+ // 则目标参数即为jQuery本身，而target表示的参数不再为目标参数
+ // Extend jQuery itself if only one argument is passed
+ if ( i === length ) {
+     target = this;
+     i--;
+ }
+
+ // 从第i个参数开始
+ for ( ; i < length; i++ ) {
+     // 获取第i个参数，且该参数不为null，
+     // 比如$.extend(target, {}, null);中的第2个参数null是不参与合并的
+     // Only deal with non-null/undefined values
+     if ( (options = arguments[ i ]) != null ) {
+
+         // 使用for~in获取该参数中所有的字段
+         // Extend the base object
+         for ( name in options ) {
+             src = target[ name ];   // 目标参数中name字段的值
+             copy = options[ name ]; // 当前参数中name字段的值
+
+             // 若参数中字段的值就是目标参数，停止赋值，进行下一个字段的赋值
+             // 这是为了防止无限的循环嵌套，我们把这个称为，在下面进行比较详细的讲解
+             // Prevent never-ending loop
+             if ( target === copy ) {
+                 continue;
+             }
+
+             // 若deep为true，且当前参数中name字段的值存在且为object类型或Array类型，则进行深度赋值
+             // Recurse if we're merging plain objects or arrays
+             if ( deep && copy && ( jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)) ) ) {
+                 // 若当前参数中name字段的值为Array类型
+                 // 判断目标参数中name字段的值是否存在，若存在则使用原来的，否则进行初始化
+                 if ( copyIsArray ) {
+                     copyIsArray = false;
+                     clone = src && jQuery.isArray(src) ? src : [];
+
+                 } else {
+                     // 若原对象存在，则直接进行使用，而不是创建
+                     clone = src && jQuery.isPlainObject(src) ? src : {};
+                 }
+
+                 // 递归处理，此处为2.2
+                 // Never move original objects, clone them                      
+                 target[ name ] = jQuery.extend( deep, clone, copy );
+
+             // deep为false，则表示浅度拷贝，直接进行赋值
+             // 若copy是简单的类型且存在值，则直接进行赋值
+             // Don't bring in undefined values
+             } else if ( copy !== undefined ) {
+                 // 若原对象存在name属性，则直接覆盖掉；若不存在，则创建新的属性
+                 target[ name ] = copy;
+             }
+         }
+     }
+ }
+
+ // 返回修改后的目标参数
+ // Return the modified object
+ return target;
+};
+```
+### 172. _js_ 有函数重载吗（网易）
+> 所谓函数重载，是方法名称进行重用的一种技术形式，其主要特点是“方法名相同，参数的类型或个数不相同”，在调用时会根据传递的参数类型和个数的不同来执行不同的方法体。
+> **在 **_**JS**_** 中，可以通过在函数内容判断形参的类型或个数来执行不同的代码块，从而达到模拟函数重载的效果。**
+
+### 173. 给你一个数组，计算每个数出现的次数，如果每个数组返回的数都是独一无二的就返回  _true_  相反则返回的 _flase_
+> 输入：arr = [1,2,2,1,1,3]
+> 输出：true 
+> 解释：在该数组中，1 出现了 3 次，2 出现了 2 次，3 只出现了 1 次。没有两个数的出现次数相同。
+
+```javascript
+function uniqueOccurrences(arr) {
+ let uniqueArr = [...new Set(arr)]
+ let countArr = []
+ for (let i = 0; i < uniqueArr.length; i++) {
+     countArr.push(arr.filter(item => item == uniqueArr[i]).length)
+ }
+ return countArr.length == new Set(countArr).size
+};
+
+// 测试
+console.log(uniqueOccurrences([1, 2, 2, 1, 1, 3])); // true
+console.log(uniqueOccurrences([1, 2, 2, 1, 1, 3, 2])); // false
+```
+
+### 174. 封装一个能够统计重复的字符的函数，例如  _aaabbbdddddfff_  转化为 _3a3b5d3f_
+```javascript
+function compression(str) {
+ if (str.length == 0) {
+     return 0;
+ }
+ var len = str.length;
+ var str2 = "";
+ var i = 0;
+ var num = 1;
+ while (i < len) {
+     if (str.charAt(i) == str.charAt(i + 1)) {
+         num++;
+     } else {
+         str2 += num;
+         str2 += str.charAt(i);
+         num = 1;
+     }
+     i++;
+ }
+ return str2;
+}
+// 测试：
+console.log(compression('aaabbbdddddfff')); // 3a3b5d3f
+```
+
+### 175. 写出代码的执行结果
+
+```javascript
+function a() {
+    console.log(1);
+}
+(function() {
+    if (false) {
+        function a() {
+            console.log(2);
+        }
+    }
+    console.log(typeof a); 
+    a(); 
+})()
+```
+
+> 会报错，_a is not a function_。
+> 因为立即执行函数里面有函数 _a_，_a_ 会被提升到该函数作用域的最顶端，但是由于判断条件是 _false_，所以不会进入到条件语句里面， _a_ 也就没有值。所以 _typeof_ 打印出来是 _undefined_。而后面在尝试调用方法，自然就会报错。
+
+### 178. _javascript_ 中什么是伪数组？如何将伪数组转换为标准数组 
+var arr = [...arguments];
+### 179. _array_ 和 _object_ 的区别
+> 数组表示有序数据的集合，对象表示无序数据的集合
+
+### 180. _jquery_ 事件委托
+> 在 _jquery_ 中使用 _on_ 来绑定事件的时候，传入第二个参数即可。例如：
+
+```javascript
+$("ul").on("click","li",function () {
+alert(1);
+})
+```
+
+### 182. 请实现一个模块 _math_，支持链式调用`math.add(2,4).minus(3).times(2);`
+```javascript
+class Math {
+ constructor(value) {
+     let hasInitValue = true;
+     if (value === undefined) {
+         value = NaN;
+         hasInitValue = false;
+     }
+     Object.defineProperties(this, {
+         value: {
+             enumerable: true,
+             value: value,
+         },
+         hasInitValue: {
+             enumerable: false,
+             value: hasInitValue,
+         },
+     });
+ }
+
+ add(...args) {
+     const init = this.hasInitValue ? this.value : args.shift();
+     const value = args.reduce((pv, cv) => pv + cv, init);
+     return new Math(value);
+ }
+
+ minus(...args) {
+     const init = this.hasInitValue ? this.value : args.shift();
+     const value = args.reduce((pv, cv) => pv - cv, init);
+     return new Math(value);
+ }
+
+ times(...args) {
+     const init = this.hasInitValue ? this.value : args.shift();
+     const value = args.reduce((pv, cv) => pv * cv, init);
+     return new Math(value);
+ }
+
+ divide(...args) {
+     const init = this.hasInitValue ? this.value : args.shift();
+     const value = args.reduce((pv, cv) => pv / cv, init);
+     return new Math(value);
+ }
+
+ toJSON() {
+     return this.valueOf();
+ }
+
+ toString() {
+     return String(this.valueOf());
+ }
+
+ valueOf() {
+     return this.value;
+ }
+
+ [Symbol.toPrimitive](hint) {
+     const value = this.value;
+     if (hint === 'string') {
+         return String(value);
+     } else {
+         return value;
+     }
+ }
+}
+
+export default new Math();
+```
+
+### 183. 请简述 _ES6_ 代码转成 _ES5_ 代码的实现思路。
+> _**Babel**_
+> - **将代码字符串解析成抽象语法树，即所谓的 **_**AST**_
+> - **对 **_**AST**_** 进行处理，在这个阶段可以对 **_**ES6**_** 代码进行相应转换，即转成 **_**ES5**_** 代码**
+> - **根据处理后的 **_**AST**_** 再生成代码字符串**
+
+### 184. 下列代码的执行结果
+
+```javascript
+async function async1() {
+    console.log('async1 start');
+    await async2();//立即执行
+    console.log('async1 end');
+}
+async function async2() {
+    console.log('async2');
+}
+console.log('script start');
+setTimeout(function () {
+    console.log('setTimeout');
+}, 0);
+async1();
+new Promise(function (resolve) {
+    console.log('promise1');
+    resolve();
+}).then(function () {
+    console.log('promise2');
+});
+console.log('script end');
+```
+### 185. _JS_ 有哪些内置对象？
+> 数据封装类对象：_String，Boolean，Number，Array_ 和 _Object_
+> 其他对象：_Function，Arguments，Math，Date，RegExp，Erro_
+
+### 187. _eval_ 是做什么的？
+
+> 此函数可以接受一个字符串 _str_ 作为参数，并把此 _str_ 当做一段 _javascript_ 代码去执行，如果 _str_ 执行结果是一个值则返回此值，否则返回 _undefined_。如果参数不是一个字符串，则直接返回该参数。
+
+```javascript
+eval("var a=1");//声明一个变量a并赋值1。
+eval("2+3");//5执行加运算，并返回运算值。
+eval("mytest()");//执行mytest()函数。
+eval("{b:2}");//声明一个对象。
+```
+### 190. 去除字符串中的空格
+> 方法一：_replace_正则匹配方法
+> - 去除字符串内所有的空格：`str = str.replace(/\s*/g,"");`
+> - 去除字符串内两头的空格：`str = str.replace(/^\s*|\s*$/g,"");`
+> - 去除字符串内左侧的空格：`str = str.replace(/^\s*/,"");`
+> - 去除字符串内右侧的空格：`str = str.replace(/(\s*$)/g,"");`
+> 
+方法二：字符串原生 _trim_ 方法
+> _trim_ 方法能够去掉两侧空格返回新的字符串，不能去掉中间的空格
+
+### 191. 常见的内存泄露，以及解决方案
+> **内存泄露概念**
+> 内存泄漏指由于疏忽或错误造成程序**未能释放已经不再使用的内存**。内存泄漏**并非指内存在物理上的消失**，而是应用程序分配某段内存后，由于设计错误，导致在释放该段内存之前就失去了对该段内存的控制，从而造成了内存的浪费。
+> 内存泄漏通常情况下只能由获得程序源代码和程序员才能分析出来。然而，有不少人习惯于把任何不需要的内存使用的增加描述为内存泄漏，即使严格意义上来说这是不准确的。
+> **_JS_ 垃圾收集机制**
+> _JS_ 具有自动回收垃圾的机制，即执行环境会负责管理程序执行中使用的内存。在C和C++等其他语言中，开发者的需要手动跟踪管理内存的使用情况。在编写 _JS_ 代码的时候，开发人员不用再关心内存使用的问题，所需内存的分配 以及无用的回收完全实现了自动管理。
+> Js中最常用的垃圾收集方式是标记清除(mark-and-sweep)。当变量进入环境（例如，在函数中声明一个变量）时，就将这个变量标记为“进入环境”。从逻辑上讲，永远不能释放进入环境的变量所占的内存，因为只要执行流进入相应的环境，就可能用到它们。而当变量离开环境时，这将其 标记为“离开环境”。
+> **常见内存泄漏以及解决方案** 
+> 1. 意外的全局变量
+> 
+Js处理未定义变量的方式比较宽松：未定义的变量会在全局对象创建一个新变量。在浏览器中，全局对象是window。
+> 解决方法：在 JavaScript 程序中添加，开启严格模式'use strict'，可以有效地避免上述问题。
+>  
+> 注意：那些用来临时存储大量数据的全局变量，确保在处理完这些数据后将其设置为null或重新赋值。与全局变量相关的增加内存消耗的一个主因是缓存。缓存数据是为了重用，缓存必须有一个大小上限才有用。高内存消耗导致缓存突破上限，因为缓 存内容无法被回收。
+>  
+> 2. 循环引用
+> 
+
+> 在js的内存管理环境中，对象 A 如果有访问对象 B 的权限，叫做对象 A 引用对象 B。引用计数的策略是将“对象是否不再需要”简化成“对象有没有其他对象引用到它”，如果没有对象引用这个对象，那么这个对象将会被回收 。
+>  
+>  
+> 但是引用计数有个最大的问题： 循环引用。
+>  
+>  
+> 当函数 func 执行结束后，返回值为 undefined，所以整个函数以及内部的变量都应该被回收，但根据引用计数方法，obj1 和 obj2 的引用次数都不为 0，所以他们不会被回收。要解决循环引用的问题，最好是在不使用它们的时候手工将它们设为空。上面的例子可以这么做：
+>  
+>  
+> 3. 被遗忘的计时器和回调函数
+> 
+
+>  
+> 上面的例子中，我们每隔一秒就将得到的数据放入到文档节点中去。
+>  
+> 但在 _setInterval_ 没有结束前，回调函数里的变量以及回调函数本身都无法被回收。那什么才叫结束呢？
+>  
+> 就是调用了 _clearInterval_。如果回调函数内没有做什么事情，并且也没有被 _clear_ 掉的话，就会造成内存泄漏。
+>  
+> 不仅如此，如果回调函数没有被回收，那么回调函数内依赖的变量也没法被回收。上面的例子中，_someResource_ 就没法被回收。同样的，_setTiemout_ 也会有同样的问题。所以，当不需要 _interval_ 或者 _timeout_ 时，最好调用 _clearInterval_ 或者 _clearTimeout_。
+>  
+> 4. _DOM_ 泄漏
+> 
+
+> 在 _JS_ 中对_DOM_操作是非常耗时的。因为_JavaScript/ECMAScript_引擎独立于渲染引擎，而_DOM_是位于渲染引擎，相互访问需要消耗一定的资源。  而 _IE_ 的 _DOM_ 回收机制便是采用引用计数的，以下主要针对 _IE_ 而言的。
+>  
+> **a. 没有清理的 DOM 元素引用**
+> 解决办法：_refA = null;_
+> **b. 给 DOM 对象添加的属性是一个对象的引用**
+>  解决方法：
+在 _window.onunload_ 事件中写上: _document.getElementById('mydiv').myProp = null;_
+>  
+> **c. DOM 对象与 JS 对象相互引用**
+>  
+>  
+> 解决方法： 在 onunload 事件中写上: document.getElementById('myDiv').myProp = null;
+>  
+> **d. 给 DOM 对象用 attachEvent 绑定事件**
+>  
+>  
+> 解决方法： 在onunload事件中写上: element.detachEvent('onclick', doClick);
+>  
+> **e. 从外到内执行 appendChild。这时即使调用 removeChild 也无法释放**
+>  
+>  
+> 解决方法： 从内到外执行 appendChild:
+>  
+>  
+> 5. _JS_ 的闭包
+> 
+
+> 闭包在 _IE6_ 下会造成内存泄漏，但是现在已经无须考虑了。值得注意的是闭包本身不会造成内存泄漏，但闭包过多很容易导致内存泄漏。闭包会造成对象引用的生命周期脱离当前函数的上下文，如果闭包如果使用不当，可以导致环形引用（_circular reference_），类似于死锁，只能避免，无法发生之后解决，即使有垃圾回收也还是会内存泄露。
+>  
+> 6. _console_
+> 
+
+> 控制台日志记录对总体内存配置文件的影响可能是许多开发人员都未想到的极其重大的问题。记录错误的对象可以将大量数据保留在内存中。注意，这也适用于：
+>  
+> (1) 在用户键入 JavaScript 时，在控制台中的一个交互式会话期间记录的对象。
+(2) 由 console.log 和 console.dir 方法记录的对象。
+
+```javascript
+function foo(arg) { 
+    bar = "this is a hidden global variable"; //等同于window.bar="this is a hidden global variable"
+    this.bar2= "potential accidental global";//这里的this 指向了全局对象（window）,等同于window.bar2="potential accidental global"
+}
+```
+```javascript
+let obj1 = { a: 1 }; // 一个对象（称之为 A）被创建，赋值给 obj1，A 的引用个数为 1   
+let obj2 = obj1; // A 的引用个数变为 2  
+
+obj1 = 0; // A 的引用个数变为 1  
+obj2 = 0; // A 的引用个数变为 0，此时对象 A 就可以被垃圾回收了
+```
+```javascript
+function func() {  
+    let obj1 = {};  
+    let obj2 = {};  
+
+    obj1.a = obj2; // obj1 引用 obj2  
+    obj2.a = obj1; // obj2 引用 obj1  
+
+}
+```
+```javascript
+obj1 = null;  
+obj2 = null;
+```
+```javascript
+let someResource = getData();  
+setInterval(() => {  
+    const node = document.getElementById('Node');  
+    if(node) {  
+        node.innerhtml = JSON.stringify(someResource));  
+    }  
+}, 1000);
+```
+```javascript
+var refA = document.getElementById('refA');
+document.body.removeChild(refA);
+// refA 不能回收，因为存在变量 refA 对它的引用。将其对 refA 引用释放，但还是无法回收 refA。
+```
+```javascript
+var MyObject = {}; 
+document.getElementById('mydiv').myProp = MyObject;
+```
+```javascript
+function Encapsulator(element) { 
+	this.elementReference = element; 
+	element.myProp = this; 
+} 
+new Encapsulator(document.getElementById('myDiv'));
+```
+```javascript
+function doClick() {} 
+element.attachEvent("onclick", doClick);
+```
+```javascript
+var parentDiv = document.createElement("div"); 
+var childDiv = document.createElement("div"); 
+document.body.appendChild(parentDiv); 
+parentDiv.appendChild(childDiv);
+```
+```javascript
+var parentDiv = document.createElement("div"); 
+var childDiv = document.createElement("div"); 
+parentDiv.appendChild(childDiv); 
+document.body.appendChild(parentDiv);
+```
